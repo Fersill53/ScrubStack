@@ -1,0 +1,8 @@
+@page "/admin"
+@attribute [Authorize(Roles = "Admin")]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>Admin Panel</h3>
+
+<p>If you're seeing this, you're signed in as an <strong>Admin</strong>.</p>
+
