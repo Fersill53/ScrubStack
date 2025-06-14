@@ -17,6 +17,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(Options => Options.SignIn.Requ
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddAuthorizationCore();
 
 var app = builder.Build();
 

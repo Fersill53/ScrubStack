@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ScrubStack.Data
