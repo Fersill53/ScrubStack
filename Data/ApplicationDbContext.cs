@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.EntityFrameworkCore;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace ScrubStack.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options) { }
+            : base(options)
+        {
+        }
     }
 }

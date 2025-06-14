@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ScrubStack.Data;
-using ScrubStack.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
