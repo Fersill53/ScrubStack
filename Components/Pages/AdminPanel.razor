@@ -1,11 +1,41 @@
-@using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthenticationStateProvider
-
 @page "/admin"
-@attribute [Authorize(Roles = "Admin")]
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@inject UserManager<IdentityUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize(Roles = "Admin")]
 
-<h3>Admin Panel</h3>
+<h3>Admin Dashboard</h3>
 
-<p>If you're seeing this, you're signed in as an <strong>Admin</strong>.</p>
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="mt-4">
+        <p>Welcome, <strong>@userName</strong> 👋</p>
+        <p>Total Users: <strong>@userCount</strong></p>
+        <p>Total Roles: <strong>@roleCount</strong></p>
+    </div>
+}
 
+@code {
+    private string userName;
+    private int userCount;
+    private int roleCount;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        userName = user.Identity?.Name ?? "Unknown";
+
+        userCount = (await UserManager.Users.CountAsync());
+        roleCount = (await RoleManager.Roles.CountAsync());
+
+        loading = false;
+    }
+}
