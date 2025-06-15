@@ -1,8 +1,7 @@
-@using Microsoft.EntityFrameworkCore
-
 @page "/admin"
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @inject UserManager<IdentityUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -20,6 +19,14 @@ else
         <p>Welcome, <strong>@userName</strong> 👋</p>
         <p>Total Users: <strong>@userCount</strong></p>
         <p>Total Roles: <strong>@roleCount</strong></p>
+
+        <h5 class="mt-4">User List</h5>
+        <ul>
+            @foreach (var user in users)
+            {
+                <li>@user.Email (@(user.EmailConfirmed ? "Confirmed" : "Unconfirmed"))</li>
+            }
+        </ul>
     </div>
 }
 
@@ -29,14 +36,17 @@ else
     private int roleCount;
     private bool loading = true;
 
+    private List<IdentityUser> users = new();
+
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         userName = user.Identity?.Name ?? "Unknown";
 
-        userCount = (await UserManager.Users.CountAsync());
-        roleCount = (await RoleManager.Roles.CountAsync());
+        userCount = await UserManager.Users.CountAsync();
+        roleCount = await RoleManager.Roles.CountAsync();
+        users = await UserManager.Users.ToListAsync();
 
         loading = false;
     }
