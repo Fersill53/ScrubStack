@@ -16,7 +16,7 @@ namespace ScrubStack.Data
             {
                 if (!await roleManager.RoleExistsAsync(role))
                 {
-                    await roleManager.CreateRoleAsync(new IdentityRole(role));
+                    await roleManager.CreateAsync(new IdentityRole(role));
                 }
 
                 var adminEmail = "admin@scrubstack.local"; //change before deploy
