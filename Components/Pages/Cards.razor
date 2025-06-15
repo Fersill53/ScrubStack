@@ -1,0 +1,65 @@
+@page "/cards"
+@using ScrubStack.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ApplicationDbContext Db
+@inject AuthenticationStateProvider AuthProvider
+@attribute [Authorize]
+
+<h3>Surgeon Preference Cards</h3>
+
+@if (loading)
+{
+    <p>Loading preference cards...</p>
+}
+else if (cards is not null && cards.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Surgeon</th>
+                <th>Procedure</th>
+                <th>Instruments</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var card in cards)
+            {
+                <tr>
+                    <td>@card.SurgeonName</td>
+                    <td>@card.ProcedureName</td>
+                    <td>@string.Join(", ", card.Instruments)</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1">Edit</button>
+                        <button class="btn btn-sm btn-danger">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No preference cards found.</p>
+}
+
+@code {
+    private bool loading = true;
+    private List<PreferenceCard> cards;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            loading = false;
+            return;
+        }
+
+        cards = await Db.PreferenceCards.ToListAsync();
+        loading = false;
+    }
+}
