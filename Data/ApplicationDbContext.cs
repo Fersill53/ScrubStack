@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using ScrubStack.Data.Models;
 
 namespace ScrubStack.Data
 {
@@ -11,4 +12,6 @@ namespace ScrubStack.Data
         {
         }
     }
-}
+    
+    public DbSet<PreferenceCard> preferenceCards { get; set; }
+    } 
