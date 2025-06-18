@@ -1,0 +1,60 @@
+@page "/cards/add"
+@using ScrubStack.Data
+@using ScrubStack.Data.Models
+@inject ApplicationDbContext Db
+@inject NavigationManager NavigationManager
+
+<h3>Add New Preference Card</h3>
+
+<EditForm Model="card" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Surgeon Name</label>
+        <InputText class="form-control" @bind-Value="card.SurgeonName" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Procedure Name</label>
+        <InputText class="form-control" @bind-Value="card.ProcedureName" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Instruments</label>
+        @for (int i = 0; i < instruments.Count; i++)
+        {
+            <div class="input-group mb-1">
+                <InputText class="form-control" @bind-Value="instruments[i]" />
+                <button class="btn btn-danger" @onclick="@(() => RemoveInstrument(i))">Remove</button>
+            </div>
+        }
+        <button class="btn btn-secondary mb-3" @onclick="AddInstrument">Add Instrument</button>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Card</button>
+</EditForm>
+
+@code {
+    private PreferenceCard card = new();
+    private List<string> instruments = new() { "" };
+
+    private void AddInstrument()
+    {
+        instruments.Add("");
+    }
+
+    private void RemoveInstrument(int index)
+    {
+        if (instruments.Count > 1)
+            instruments.RemoveAt(index);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        card.Instruments = new List<string>(instruments);
+        Db.PreferenceCards.Add(card);
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo("/cards");
+    }
+}
