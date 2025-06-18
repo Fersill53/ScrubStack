@@ -1,42 +1,37 @@
 @page "/admin"
-@using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
 @inject UserManager<IdentityUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@attribute [Authorize(Roles = "Admin")]
 
 <h3>Admin Dashboard</h3>
 
-@if (loading)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <div class="mt-4">
-        <p>Welcome, <strong>@userName</strong> 👋</p>
-        <p>Total Users: <strong>@userCount</strong></p>
-        <p>Total Roles: <strong>@roleCount</strong></p>
-
-        <h5 class="mt-4">User List</h5>
-        <ul>
-            @foreach (var user in users)
-            {
-                <li>@user.Email (@(user.EmailConfirmed ? "Confirmed" : "Unconfirmed"))</li>
-            }
-        </ul>
-    </div>
-}
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        @if (loading)
+        {
+            <p>Loading...</p>
+        }
+        else
+        {
+            <div class="mt-4">
+                <p>Welcome, <strong>@userName</strong> 👋</p>
+                <p>Total Users: <strong>@userCount</strong></p>
+                <p>Total Roles: <strong>@roleCount</strong></p>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page.</p>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
-    private string userName = string.Empty;
+    private string userName = "";
     private int userCount;
     private int roleCount;
     private bool loading = true;
-
-    private List<IdentityUser> users = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -46,7 +41,6 @@ else
 
         userCount = await UserManager.Users.CountAsync();
         roleCount = await RoleManager.Roles.CountAsync();
-        users = await UserManager.Users.ToListAsync();
 
         loading = false;
     }
