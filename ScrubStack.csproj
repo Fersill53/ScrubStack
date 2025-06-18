@@ -17,9 +17,5 @@
     </PackageReference>
   </ItemGroup>
 
-  <!-- ✅ Add this new ItemGroup for static file copying -->
-  <ItemGroup>
-    <Content Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
 
 </Project>
