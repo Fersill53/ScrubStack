@@ -1,7 +1,7 @@
 @page "/cards/add"
-@using Microsoft.EntityFrameworkCore
 @using ScrubStack.Data
 @using ScrubStack.Data.Models
+@using Microsoft.EntityFrameworkCore
 @inject ApplicationDbContext Db
 @inject NavigationManager NavigationManager
 
@@ -23,15 +23,32 @@
 
     <div class="mb-3">
         <label class="form-label">Instrument Sets</label>
-        @foreach (var set in AllInstrumentSets)
+        @if (availableSets != null)
         {
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input"
-                       value="@set.Id"
-                       @onchange="e => ToggleInstrumentSetSelection(set.Id, e.Value?.ToString() == "on")" />
-                <label class="form-check-label">@set.Name</label>
+            @foreach (var set in availableSets)
+            {
+                <div class="form-check">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           id="set_@set.Id"
+                           @onchange="(e => selectedSets[set.Id] = (bool)e.Value!)"
+                           checked="@selectedSets.ContainsKey(set.Id) && selectedSets[set.Id]" />
+                    <label class="form-check-label" for="set_@set.Id">@set.SetName</label>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Instruments</label>
+        @for (int i = 0; i < instruments.Count; i++)
+        {
+            <div class="input-group mb-1">
+                <InputText class="form-control" @bind-Value="instruments[i]" />
+                <button type="button" class="btn btn-danger" @onclick="() => RemoveInstrument(i)">Remove</button>
             </div>
         }
+        <button type="button" class="btn btn-secondary mb-3" @onclick="AddInstrument">Add Instrument</button>
     </div>
 
     <button type="submit" class="btn btn-primary">Save Card</button>
@@ -39,30 +56,36 @@
 
 @code {
     private PreferenceCard card = new();
-    private List<InstrumentSet> AllInstrumentSets = new();
-    private HashSet<int> SelectedSetIds = new();
+    private List<string> instruments = new() { "" };
+    private List<InstrumentSet> availableSets = new();
+    private Dictionary<int, bool> selectedSets = new();
 
     protected override async Task OnInitializedAsync()
     {
-        AllInstrumentSets = await Db.InstrumentSets.ToListAsync();
+        availableSets = await Db.InstrumentSets.ToListAsync();
+        foreach (var set in availableSets)
+        {
+            selectedSets[set.Id] = false;
+        }
     }
 
-    private void ToggleInstrumentSetSelection(int setId, bool selected)
+    private void AddInstrument()
     {
-        if (selected)
-            SelectedSetIds.Add(setId);
-        else
-            SelectedSetIds.Remove(setId);
+        instruments.Add("");
+    }
+
+    private void RemoveInstrument(int index)
+    {
+        if (instruments.Count > 1)
+            instruments.RemoveAt(index);
     }
 
     private async Task HandleValidSubmit()
     {
-        // Load the selected sets from the DB and assign them to the card
-        var selectedSets = await Db.InstrumentSets
-            .Where(set => SelectedSetIds.Contains(set.Id))
-            .ToListAsync();
-
-        card.InstrumentSets = selectedSets;
+        card.Instruments = new List<string>(instruments);
+        card.InstrumentSets = availableSets
+            .Where(set => selectedSets.ContainsKey(set.Id) && selectedSets[set.Id])
+            .ToList();
 
         Db.PreferenceCards.Add(card);
         await Db.SaveChangesAsync();
