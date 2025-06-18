@@ -9,6 +9,8 @@ namespace ScrubStack.Data.Models
         public string? ProcedureName { get; set; }
         public List<string> Instruments { get; set; } = new();
 
+        public List<InstrumentSet> InstrumentSets { get; set; } = new();
+
        
     }
 }
