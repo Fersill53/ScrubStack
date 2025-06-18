@@ -11,8 +11,8 @@ namespace ScrubStack.Data
             : base(options)
         {
         }
-        public DbSet<PreferenceCard> preferenceCards { get; set; }
+        public DbSet<PreferenceCard> PreferenceCards { get; set; }
     }
-    
-    
-    } 
+
+
+}
