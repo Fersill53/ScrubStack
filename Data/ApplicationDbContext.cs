@@ -12,6 +12,8 @@ namespace ScrubStack.Data
         {
         }
         public DbSet<PreferenceCard> PreferenceCards { get; set; }
+
+        public DbSet<InstrumentSet> InstrumentSets { get; set; }
     }
 
 
