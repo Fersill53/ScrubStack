@@ -1,25 +1,21 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ScrubStack.Data;
-using ScrubStack.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+// Add services
+builder.Services.AddRazorPages(); // For _Host.cshtml
+builder.Services.AddServerSideBlazor(); // For Blazor Server rendering
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddAuthorizationCore();
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
 
 var app = builder.Build();
 
@@ -29,19 +25,23 @@ using (var scope = app.Services.CreateScope())
     await SeedData.InitializeAsync(services);
 }
 
-// Configure the HTTP request pipeline.
+// Middleware
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseAntiforgery();
+app.UseRouting();
 
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Routing endpoints
+app.MapRazorPages(); // ✅ Enables _Host.cshtml
+app.MapBlazorHub();  // ✅ Enables SignalR connection for Blazor
+app.MapFallbackToPage("/_Host"); // ✅ Fallback to Blazor UI
 
 app.Run();
-
