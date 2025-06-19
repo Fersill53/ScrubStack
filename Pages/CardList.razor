@@ -21,7 +21,7 @@ else if (cards is not null && cards.Any())
             <tr>
                 <th>Surgeon</th>
                 <th>Procedure</th>
-                <th>Instruments</th>
+                <th>Instrument Sets</th>
                 <th></th>
             </tr>
         </thead>
@@ -31,7 +31,16 @@ else if (cards is not null && cards.Any())
                 <tr>
                     <td>@card.SurgeonName</td>
                     <td>@card.ProcedureName</td>
-                    <td>@string.Join(", ", card.Instruments)</td>
+                    <td>
+                        @if (card.InstrumentSets?.Count > 0)
+                        {
+                            @string.Join(", ", card.InstrumentSets.Select(s => s.SetName))
+                        }
+                        else
+                        {
+                            <em>No sets</em>
+                        }
+                    </td>
                     <td>
                         <button class="btn btn-sm btn-primary me-1">Edit</button>
                         <button class="btn btn-sm btn-danger">Delete</button>
@@ -61,7 +70,10 @@ else
             return;
         }
 
-        cards = await Db.PreferenceCards.ToListAsync();
+        cards = await Db.PreferenceCards
+            .Include(c => c.InstrumentSets)
+            .ToListAsync();
+
         loading = false;
     }
 }
