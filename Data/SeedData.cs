@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using ScrubStack.Data.Models;
 
 namespace ScrubStack.Data
 {
@@ -31,6 +32,20 @@ namespace ScrubStack.Data
                     {
                         await userManager.AddToRoleAsync(adminUser, "Admin");
                     }
+                }
+
+                if (!await ContextBoundObject.InstrumentSets.AnyAsync())
+                {
+                    var sets = new List<InstrumentSet>
+                    {
+                        new() { SetName = "Basic Ortho Set" },
+                        new() { SetName = "Major Tray" },
+                        new() { SetName = "Hand and Foot Tray"},
+                        new() { SetName = "Hip Tray" }
+                    };
+
+                    context.InstrumentSets.AddRange(sets);
+                    await Context.SaveChangesAsync();
                 }
             }
         }
