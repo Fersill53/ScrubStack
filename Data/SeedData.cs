@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ScrubStack.Data.Models;
 
@@ -10,7 +11,9 @@ namespace ScrubStack.Data
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
+            // Seed roles
             string[] roles = { "Admin", "Staff", "Viewer" };
 
             foreach (var role in roles)
@@ -19,34 +22,36 @@ namespace ScrubStack.Data
                 {
                     await roleManager.CreateAsync(new IdentityRole(role));
                 }
+            }
 
-                var adminEmail = "admin@scrubstack.local"; //change before deploy
-                var adminPassword = "Admin123"; //change before deploy
+            // Seed default admin
+            var adminEmail = "admin@scrubstack.local"; // Change before deploy
+            var adminPassword = "Admin123";             // Change before deploy
 
-                var adminUser = await userManager.FindByEmailAsync(adminEmail);
-                if (adminUser == null)
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
+            {
+                adminUser = new IdentityUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+                var result = await userManager.CreateAsync(adminUser, adminPassword);
+                if (result.Succeeded)
                 {
-                    adminUser = new IdentityUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
-                    var result = await userManager.CreateAsync(adminUser, adminPassword);
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(adminUser, "Admin");
-                    }
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
                 }
+            }
 
-                if (!await ContextBoundObject.InstrumentSets.AnyAsync())
+            // ✅ Seed Instrument Sets
+            if (!await context.InstrumentSets.AnyAsync())
+            {
+                var sets = new List<InstrumentSet>
                 {
-                    var sets = new List<InstrumentSet>
-                    {
-                        new() { SetName = "Basic Ortho Set" },
-                        new() { SetName = "Major Tray" },
-                        new() { SetName = "Hand and Foot Tray"},
-                        new() { SetName = "Hip Tray" }
-                    };
+                    new() { SetName = "Basic Ortho Set" },
+                    new() { SetName = "Major Tray" },
+                    new() { SetName = "Hand and Foot Tray" },
+                    new() { SetName = "Hip Tray" }
+                };
 
-                    context.InstrumentSets.AddRange(sets);
-                    await Context.SaveChangesAsync();
-                }
+                context.InstrumentSets.AddRange(sets);
+                await context.SaveChangesAsync();
             }
         }
     }
