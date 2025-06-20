@@ -1,3 +1,4 @@
+@using Blazorise
 @page "/cards/add"
 @attribute [Authorize]
 
@@ -37,7 +38,7 @@
 </Validations>
 
 @code {
-    private Validations validationsRef;
+    private Validations? validationsRef;
     private PreferenceCard card = new();
     private List<InstrumentSet> allSets = new();
     private List<int> selectedSetIds = new();

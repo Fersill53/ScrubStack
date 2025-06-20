@@ -45,8 +45,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Must be called after UseRouting and before Map
-app.UseBlazorise();
+
 
 app.MapRazorPages();
 app.MapBlazorHub();
