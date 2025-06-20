@@ -4,63 +4,81 @@
 @using ScrubStack.Data
 @using ScrubStack.Data.Models
 @using Microsoft.EntityFrameworkCore
+@using Blazorise
 @inject ApplicationDbContext Db
 @inject NavigationManager NavigationManager
 
+<PageTitle>Add Preference Card</PageTitle>
+
 <Layout>
-    <PageTitle>Add Preference Card</PageTitle>
+    <Card>
+        <CardHeader>
+            <CardTitle>Add Preference Card</CardTitle>
+        </CardHeader>
 
-    <h3 class="mb-4">Add Preference Card</h3>
+        <CardBody>
+            <Validations @ref="validationsRef">
+                <Fields>
 
-    <Validations @ref="validationsRef">
-        <Field>
-            <Label>Surgeon Name</Label>
-            <TextEdit @bind-Text="card.SurgeonName" />
-        </Field>
+                    <Field>
+                        <Label>Surgeon Name</Label>
+                        <TextEdit @bind-Text="card.SurgeonName" />
+                    </Field>
 
-        <Field>
-            <Label>Procedure Name</Label>
-            <TextEdit @bind-Text="card.ProcedureName" />
-        </Field>
+                    <Field>
+                        <Label>Procedure Name</Label>
+                        <TextEdit @bind-Text="card.ProcedureName" />
+                    </Field>
 
-        <Field>
-            <Label>Instrument Sets</Label>
-            <Select TValue="int"
-                    Multiple="true"
-                    @bind-SelectedValues="selectedSetIds">
-                @foreach (var set in allSets)
-                {
-                    <SelectItem Value="@set.Id">@set.SetName</SelectItem>
-                }
-            </Select>
-        </Field>
+                    <Field>
+                        <Label>Instrument Sets</Label>
+                        <Select TValue="int"
+                                Multiple="true"
+                                SelectedValues="selectedSetIds"
+                                SelectedValuesChanged="@((List<int> ids) => OnSelectedValuesChanged(ids))">
+                            @foreach (var set in allSets)
+                            {
+                                <SelectItem Value="@set.Id">@set.SetName</SelectItem>
+                            }
+                        </Select>
+                    </Field>
 
-        <Button Color="Color.Success" Clicked="HandleSubmit">Add Card</Button>
-    </Validations>
+                </Fields>
+
+                <div class="mt-3">
+                    <Button Color="Color.Primary" Clicked="HandleValidSubmit">Submit</Button>
+                </div>
+            </Validations>
+        </CardBody>
+    </Card>
 </Layout>
 
 @code {
     private PreferenceCard card = new();
     private List<InstrumentSet> allSets = new();
     private List<int> selectedSetIds = new();
-    private Validations validationsRef = default!;
+    private Validations? validationsRef;
 
     protected override async Task OnInitializedAsync()
     {
         allSets = await Db.InstrumentSets.ToListAsync();
     }
 
-    private async Task HandleSubmit()
+    private void OnSelectedValuesChanged(List<int> ids)
     {
-        if (await validationsRef.ValidateAll())
-        {
-            // Get the full InstrumentSet objects based on selected IDs
-            var selectedSets = allSets.Where(s => selectedSetIds.Contains(s.Id)).ToList();
+        selectedSetIds = ids;
+    }
 
-            card.InstrumentSets = selectedSets;
-            Db.PreferenceCards.Add(card);
-            await Db.SaveChangesAsync();
-            NavigationManager.NavigateTo("/cards");
-        }
+    private async Task HandleValidSubmit()
+    {
+        var selectedSets = await Db.InstrumentSets
+            .Where(set => selectedSetIds.Contains(set.Id))
+            .ToListAsync();
+
+        card.InstrumentSets = selectedSets;
+
+        Db.PreferenceCards.Add(card);
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo("/cards");
     }
 }
