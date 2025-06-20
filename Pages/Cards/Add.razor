@@ -2,12 +2,14 @@
 @attribute [Authorize]
 @inject ApplicationDbContext Db
 @inject NavigationManager NavManager
+@using Microsoft.EntityFrameworkCore
+@using Blazorise
 
 <h3>Add Preference Card</h3>
 
 <EditForm Model="card" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
-    <ValidationSummary />
+    <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
 
     <div class="mb-3">
         <label class="form-label">Surgeon Name</label>
@@ -24,7 +26,7 @@
         <Multiselect TItem="InstrumentSet"
                      TValue="List<InstrumentSet>"
                      Data="@allSets"
-                     @bind-SelectedValues="selectedSets"
+                     bind-Value="selectedSets"
                      TextField="SetName"
                      ValueField="Id"
                      Placeholder="Select instrument sets..."
@@ -33,6 +35,7 @@
 
     <button type="submit" class="btn btn-success">Add Card</button>
 </EditForm>
+
 
 @code {
     private PreferenceCard card = new();
