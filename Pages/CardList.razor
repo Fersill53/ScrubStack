@@ -1,12 +1,6 @@
 @page "/cards"
-@using Microsoft.EntityFrameworkCore
-@using ScrubStack.Data
-@using ScrubStack.Data.Models   
-@using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.Components.Authorization
-@inject ApplicationDbContext Db
-@inject AuthenticationStateProvider AuthProvider
 @attribute [Authorize]
+@inject ApplicationDbContext Db
 
 <h3>Surgeon Preference Cards</h3>
 
@@ -32,13 +26,9 @@ else if (cards is not null && cards.Any())
                     <td>@card.SurgeonName</td>
                     <td>@card.ProcedureName</td>
                     <td>
-                        @if (card.InstrumentSets?.Count > 0)
+                        @if (card.InstrumentSets is not null)
                         {
                             @string.Join(", ", card.InstrumentSets.Select(s => s.SetName))
-                        }
-                        else
-                        {
-                            <em>No sets</em>
                         }
                     </td>
                     <td>
@@ -57,23 +47,13 @@ else
 
 @code {
     private bool loading = true;
-    private List<PreferenceCard> cards;
+    private List<PreferenceCard> cards = new();
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (!user.Identity?.IsAuthenticated ?? true)
-        {
-            loading = false;
-            return;
-        }
-
         cards = await Db.PreferenceCards
             .Include(c => c.InstrumentSets)
             .ToListAsync();
-
         loading = false;
     }
 }

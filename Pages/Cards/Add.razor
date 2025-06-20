@@ -1,11 +1,9 @@
 @page "/cards/add"
-@using ScrubStack.Data
-@using ScrubStack.Data.Models
-@using Microsoft.EntityFrameworkCore
+@attribute [Authorize]
 @inject ApplicationDbContext Db
-@inject NavigationManager NavigationManager
+@inject NavigationManager NavManager
 
-<h3>Add New Preference Card</h3>
+<h3>Add Preference Card</h3>
 
 <EditForm Model="card" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -23,31 +21,34 @@
 
     <div class="mb-3">
         <label class="form-label">Instrument Sets</label>
-        <BlazoredMultiSelect TItem="InstrumentSet" TValue="int"
-                             Items="availableSets"
-                             TextProperty="SetName"
-                             ValueProperty="Id"
-                             @bind-SelectedValues="selectedSetIds" />
+        <Multiselect TItem="InstrumentSet"
+                     TValue="List<InstrumentSet>"
+                     Data="@allSets"
+                     @bind-SelectedValues="selectedSets"
+                     TextField="SetName"
+                     ValueField="Id"
+                     Placeholder="Select instrument sets..."
+                     MaxSelectedItems="5" />
     </div>
 
-    <button type="submit" class="btn btn-primary">Save Card</button>
+    <button type="submit" class="btn btn-success">Add Card</button>
 </EditForm>
 
 @code {
     private PreferenceCard card = new();
-    private List<InstrumentSet> availableSets = new();
-    private List<int> selectedSetIds = new();
+    private List<InstrumentSet> allSets = new();
+    private List<InstrumentSet> selectedSets = new();
 
     protected override async Task OnInitializedAsync()
     {
-        availableSets = await Db.InstrumentSets.ToListAsync();
+        allSets = await Db.InstrumentSets.ToListAsync();
     }
 
     private async Task HandleValidSubmit()
     {
-        card.InstrumentSets = availableSets.Where(set => selectedSetIds.Contains(set.Id)).ToList();
+        card.InstrumentSets = selectedSets;
         Db.PreferenceCards.Add(card);
         await Db.SaveChangesAsync();
-        NavigationManager.NavigateTo("/cards");
+        NavManager.NavigateTo("/cards");
     }
 }
