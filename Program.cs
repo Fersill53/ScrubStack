@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddRazorPages(); // For _Host.cshtml
 builder.Services.AddServerSideBlazor(); // For Blazor Server rendering
+builder.Services.AddBlazoredTypeahead();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
