@@ -1,4 +1,3 @@
-@using Blazorise
 @page "/cards/add"
 @attribute [Authorize]
 
@@ -8,56 +7,60 @@
 @inject ApplicationDbContext Db
 @inject NavigationManager NavigationManager
 
-<h3>Add Preference Card</h3>
+<Layout>
+    <PageTitle>Add Preference Card</PageTitle>
 
-<Validations @ref="validationsRef" ValidSubmit="HandleValidSubmit">
-    <Field>
-        <Label>Surgeon Name</Label>
-        <TextEdit @bind-Text="card.SurgeonName" />
-        <ValidationError />
-    </Field>
+    <h3 class="mb-4">Add Preference Card</h3>
 
-    <Field>
-        <Label>Procedure Name</Label>
-        <TextEdit @bind-Text="card.ProcedureName" />
-        <ValidationError />
-    </Field>
+    <Validations @ref="validationsRef">
+        <Field>
+            <Label>Surgeon Name</Label>
+            <TextEdit @bind-Text="card.SurgeonName" />
+        </Field>
 
-    <Field>
-        <Label>Instrument Sets</Label>
-        <Select TValue="int" Multiple @bind-SelectedValues="selectedSetIds">
-            @foreach (var set in allSets)
-            {
-                <SelectItem Value="@set.Id">@set.SetName</SelectItem>
-            }
-        </Select>
-        <ValidationError />
-    </Field>
+        <Field>
+            <Label>Procedure Name</Label>
+            <TextEdit @bind-Text="card.ProcedureName" />
+        </Field>
 
-    <Button Color="Color.Success" Type="Button" Clicked="HandleValidSubmit">Add Card</Button>
-</Validations>
+        <Field>
+            <Label>Instrument Sets</Label>
+            <Select TValue="int"
+                    Multiple="true"
+                    @bind-SelectedValues="selectedSetIds">
+                @foreach (var set in allSets)
+                {
+                    <SelectItem Value="@set.Id">@set.SetName</SelectItem>
+                }
+            </Select>
+        </Field>
+
+        <Button Color="Color.Success" Clicked="HandleSubmit">Add Card</Button>
+    </Validations>
+</Layout>
 
 @code {
-    private Validations? validationsRef;
     private PreferenceCard card = new();
     private List<InstrumentSet> allSets = new();
     private List<int> selectedSetIds = new();
+    private Validations validationsRef = default!;
 
     protected override async Task OnInitializedAsync()
     {
         allSets = await Db.InstrumentSets.ToListAsync();
     }
 
-    private async Task HandleValidSubmit()
+    private async Task HandleSubmit()
     {
-        // Load actual InstrumentSet objects by selected IDs
-        var selectedSets = await Db.InstrumentSets
-            .Where(s => selectedSetIds.Contains(s.Id))
-            .ToListAsync();
+        if (await validationsRef.ValidateAll())
+        {
+            // Get the full InstrumentSet objects based on selected IDs
+            var selectedSets = allSets.Where(s => selectedSetIds.Contains(s.Id)).ToList();
 
-        card.InstrumentSets = selectedSets;
-        Db.PreferenceCards.Add(card);
-        await Db.SaveChangesAsync();
-        NavigationManager.NavigateTo("/cards");
+            card.InstrumentSets = selectedSets;
+            Db.PreferenceCards.Add(card);
+            await Db.SaveChangesAsync();
+            NavigationManager.NavigateTo("/cards");
+        }
     }
 }
