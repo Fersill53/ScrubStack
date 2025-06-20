@@ -4,45 +4,43 @@
 @using ScrubStack.Data
 @using ScrubStack.Data.Models
 @using Microsoft.EntityFrameworkCore
-@using Blazorise
 @inject ApplicationDbContext Db
 @inject NavigationManager NavigationManager
 
 <h3>Add Preference Card</h3>
 
-<EditForm Model="card" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<Validations @ref="validationsRef" ValidSubmit="HandleValidSubmit">
+    <Field>
+        <Label>Surgeon Name</Label>
+        <TextEdit @bind-Text="card.SurgeonName" />
+        <ValidationError />
+    </Field>
 
-    <div class="mb-3">
-        <label>Surgeon Name</label>
-        <InputText class="form-control" @bind-Value="card.SurgeonName" />
-    </div>
+    <Field>
+        <Label>Procedure Name</Label>
+        <TextEdit @bind-Text="card.ProcedureName" />
+        <ValidationError />
+    </Field>
 
-    <div class="mb-3">
-        <label>Procedure Name</label>
-        <InputText class="form-control" @bind-Value="card.ProcedureName" />
-    </div>
+    <Field>
+        <Label>Instrument Sets</Label>
+        <Select TValue="int" Multiple @bind-SelectedValues="selectedSetIds">
+            @foreach (var set in allSets)
+            {
+                <SelectItem Value="@set.Id">@set.SetName</SelectItem>
+            }
+        </Select>
+        <ValidationError />
+    </Field>
 
-    <div class="mb-3">
-        <label>Instrument Sets</label>
-        <Select TValue="InstrumentSet"
-                TItem="InstrumentSet"
-                @bind-SelectedValues="selectedSets"
-                Data="@allSets"
-                TextField="SetName"
-                ValueField="Id"
-                Multiple="true"
-                Class="form-control" />
-    </div>
-
-    <button type="submit" class="btn btn-success">Add Card</button>
-</EditForm>
+    <Button Color="Color.Success" Type="Button" Clicked="HandleValidSubmit">Add Card</Button>
+</Validations>
 
 @code {
+    private Validations validationsRef;
     private PreferenceCard card = new();
     private List<InstrumentSet> allSets = new();
-    private List<InstrumentSet> selectedSets = new();
+    private List<int> selectedSetIds = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,6 +49,11 @@
 
     private async Task HandleValidSubmit()
     {
+        // Load actual InstrumentSet objects by selected IDs
+        var selectedSets = await Db.InstrumentSets
+            .Where(s => selectedSetIds.Contains(s.Id))
+            .ToListAsync();
+
         card.InstrumentSets = selectedSets;
         Db.PreferenceCards.Add(card);
         await Db.SaveChangesAsync();
