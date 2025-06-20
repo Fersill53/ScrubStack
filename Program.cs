@@ -1,17 +1,28 @@
 using Blazorise;
-using Blazorise.Bootstrap5;
+using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
+using Blazored.Typeahead;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ScrubStack.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
-builder.Services.AddRazorPages(); // For _Host.cshtml
-builder.Services.AddServerSideBlazor(); // For Blazor Server rendering
+// ➤ Add services to the container
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+builder.Services.AddBlazoredTypeahead();
 
+// ✅ Blazorise configuration
+builder.Services
+    .AddBlazorise(options =>
+    {
+        options.Immediate = true;
+    })
+    .AddBootstrapProviders()
+    .AddFontAwesomeIcons();
 
+// ✅ Entity Framework and Identity
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -23,13 +34,14 @@ builder.Services.AddAuthorizationCore();
 
 var app = builder.Build();
 
+// ➤ Seed initial roles and admin user
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     await SeedData.InitializeAsync(services);
 }
 
-// Middleware
+// ➤ Middleware setup
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -43,9 +55,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Routing endpoints
-app.MapRazorPages(); // ✅ Enables _Host.cshtml
-app.MapBlazorHub();  // ✅ Enables SignalR connection for Blazor
-app.MapFallbackToPage("/_Host"); // ✅ Fallback to Blazor UI
+// ✅ Initialize Blazorise (must come after UseRouting, before endpoints)
+app.UseBlazorise();
+
+// ➤ Map Blazor endpoints
+app.MapRazorPages();
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
 
 app.Run();

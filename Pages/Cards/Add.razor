@@ -1,41 +1,41 @@
 @page "/cards/add"
 @attribute [Authorize]
-@inject ApplicationDbContext Db
-@inject NavigationManager NavManager
+
+@using ScrubStack.Data
+@using ScrubStack.Data.Models
 @using Microsoft.EntityFrameworkCore
-@using Blazorise
+@inject ApplicationDbContext Db
+@inject NavigationManager NavigationManager
 
 <h3>Add Preference Card</h3>
 
 <EditForm Model="card" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
-    <Microsoft.AspNetCore.Components.Forms.ValidationSummary />
+    <ValidationSummary />
 
     <div class="mb-3">
-        <label class="form-label">Surgeon Name</label>
+        <label>Surgeon Name</label>
         <InputText class="form-control" @bind-Value="card.SurgeonName" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Procedure Name</label>
+        <label>Procedure Name</label>
         <InputText class="form-control" @bind-Value="card.ProcedureName" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Instrument Sets</label>
+        <label>Instrument Sets</label>
         <Multiselect TItem="InstrumentSet"
                      TValue="List<InstrumentSet>"
+                     @bind-SelectedValues="selectedSets"
                      Data="@allSets"
-                     bind-Value="selectedSets"
-                     TextField="SetName"
-                     ValueField="Id"
-                     Placeholder="Select instrument sets..."
-                     MaxSelectedItems="5" />
+                     TextProperty="SetName"
+                     ValueProperty="Id"
+                     Placeholder="Select one or more sets..." />
     </div>
 
     <button type="submit" class="btn btn-success">Add Card</button>
 </EditForm>
-
 
 @code {
     private PreferenceCard card = new();
@@ -52,6 +52,6 @@
         card.InstrumentSets = selectedSets;
         Db.PreferenceCards.Add(card);
         await Db.SaveChangesAsync();
-        NavManager.NavigateTo("/cards");
+        NavigationManager.NavigateTo("/cards");
     }
 }
