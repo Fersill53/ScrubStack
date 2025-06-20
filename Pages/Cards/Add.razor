@@ -35,7 +35,7 @@
                         <Select TValue="int"
                                 Multiple="true"
                                 SelectedValues="selectedSetIds"
-                                SelectedValuesChanged="@((List<int> ids) => OnSelectedValuesChanged(ids))">
+                                SelectedValuesChanged="@OnSelectedValuesChanged">
                             @foreach (var set in allSets)
                             {
                                 <SelectItem Value="@set.Id">@set.SetName</SelectItem>
@@ -46,7 +46,7 @@
                 </Fields>
 
                 <div class="mt-3">
-                    <Button Color="Color.Primary" Clicked="HandleValidSubmit">Submit</Button>
+                    <Button Color="Color.Primary" Clicked="@HandleValidSubmit">Submit</Button>
                 </div>
             </Validations>
         </CardBody>
@@ -64,9 +64,10 @@
         allSets = await Db.InstrumentSets.ToListAsync();
     }
 
-    private void OnSelectedValuesChanged(List<int> ids)
+    private Task OnSelectedValuesChanged(IEnumerable<int> ids)
     {
-        selectedSetIds = ids;
+        selectedSetIds = ids.ToList();
+        return Task.CompletedTask;
     }
 
     private async Task HandleValidSubmit()
