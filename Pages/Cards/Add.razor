@@ -4,6 +4,7 @@
 @using ScrubStack.Data
 @using ScrubStack.Data.Models
 @using Microsoft.EntityFrameworkCore
+@using Blazorise
 @inject ApplicationDbContext Db
 @inject NavigationManager NavigationManager
 
@@ -25,13 +26,14 @@
 
     <div class="mb-3">
         <label>Instrument Sets</label>
-        <Multiselect TItem="InstrumentSet"
-                     TValue="List<InstrumentSet>"
-                     @bind-SelectedValues="selectedSets"
-                     Data="@allSets"
-                     TextProperty="SetName"
-                     ValueProperty="Id"
-                     Placeholder="Select one or more sets..." />
+        <Select TValue="InstrumentSet"
+                TItem="InstrumentSet"
+                @bind-SelectedValues="selectedSets"
+                Data="@allSets"
+                TextField="SetName"
+                ValueField="Id"
+                Multiple="true"
+                Class="form-control" />
     </div>
 
     <button type="submit" class="btn btn-success">Add Card</button>
