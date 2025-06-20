@@ -1,9 +1,7 @@
-// Add.razor
 @page "/cards/add"
 @using ScrubStack.Data
 @using ScrubStack.Data.Models
 @using Microsoft.EntityFrameworkCore
-@using Blazored.Typeahead
 @inject ApplicationDbContext Db
 @inject NavigationManager NavigationManager
 
@@ -25,20 +23,11 @@
 
     <div class="mb-3">
         <label class="form-label">Instrument Sets</label>
-        <BlazoredTypeahead
-            @bind-SelectedItems="selectedInstrumentSets"
-            Data="filteredSets"
-            TextField="SetName"
-            ValueField="Id"
-            TValue="InstrumentSet"
-            TItem="InstrumentSet"
-            Placeholder="Search and select instrument sets"
-            MinLength="1"
-            Debounce="300"
-            Class="form-control"
-            EnableClear="true"
-            ShowDropDownOnFocus="true"
-            Multiple="true" />
+        <BlazoredMultiSelect TItem="InstrumentSet" TValue="int"
+                             Items="availableSets"
+                             TextProperty="SetName"
+                             ValueProperty="Id"
+                             @bind-SelectedValues="selectedSetIds" />
     </div>
 
     <button type="submit" class="btn btn-primary">Save Card</button>
@@ -46,24 +35,17 @@
 
 @code {
     private PreferenceCard card = new();
-    private List<InstrumentSet> allSets = new();
-    private List<InstrumentSet> selectedInstrumentSets = new();
+    private List<InstrumentSet> availableSets = new();
+    private List<int> selectedSetIds = new();
 
     protected override async Task OnInitializedAsync()
     {
-        allSets = await Db.InstrumentSets.ToListAsync();
-    }
-
-    private async Task<IEnumerable<InstrumentSet>> filteredSets(string searchText)
-    {
-        return allSets
-            .Where(set => set.SetName.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        availableSets = await Db.InstrumentSets.ToListAsync();
     }
 
     private async Task HandleValidSubmit()
     {
-        card.InstrumentSets = selectedInstrumentSets;
+        card.InstrumentSets = availableSets.Where(set => selectedSetIds.Contains(set.Id)).ToList();
         Db.PreferenceCards.Add(card);
         await Db.SaveChangesAsync();
         NavigationManager.NavigateTo("/cards");
