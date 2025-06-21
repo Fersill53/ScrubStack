@@ -1,0 +1,106 @@
+@page "/cards/edit/{Id:int}"
+@attribute [Authorize]
+
+@using ScrubStack.Data
+@using ScrubStack.Data.Models
+@using Microsoft.EntityFrameworkCore
+@using Blazorise
+@inject ApplicationDbContext Db
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Preference Card</PageTitle>
+
+@if (card is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <Layout>
+        <Card>
+            <CardHeader>
+                <CardTitle>Edit Preference Card</CardTitle>
+            </CardHeader>
+
+            <CardBody>
+                <Validations @ref="validationsRef">
+                    <Fields>
+
+                        <Field>
+                            <Label>Surgeon Name</Label>
+                            <TextEdit @bind-Text="card.SurgeonName" />
+                        </Field>
+
+                        <Field>
+                            <Label>Procedure Name</Label>
+                            <TextEdit @bind-Text="card.ProcedureName" />
+                        </Field>
+
+                        <Field>
+                            <Label>Instrument Sets</Label>
+                            <Select TValue="int"
+                                    Multiple="true"
+                                    SelectedValues="selectedSetIds"
+                                    SelectedValuesChanged="@((List<int> ids) => OnSelectedValuesChanged(ids))">
+                                @foreach (var set in allSets)
+                                {
+                                    <SelectItem Value="@set.Id">@set.SetName</SelectItem>
+                                }
+                            </Select>
+                        </Field>
+
+                    </Fields>
+
+                    <div class="mt-3">
+                        <Button Color="Color.Primary" Clicked="HandleValidSubmit">Save</Button>
+                        <Button Color="Color.Secondary" Class="ms-2" Clicked="@(() => NavigationManager.NavigateTo("/cards"))">Cancel</Button>
+                    </div>
+                </Validations>
+            </CardBody>
+        </Card>
+    </Layout>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private PreferenceCard? card;
+    private List<InstrumentSet> allSets = new();
+    private List<int> selectedSetIds = new();
+    private Validations? validationsRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        card = await Db.PreferenceCards
+            .Include(c => c.InstrumentSets)
+            .FirstOrDefaultAsync(c => c.Id == Id);
+
+        if (card is not null)
+        {
+            selectedSetIds = card.InstrumentSets.Select(s => s.Id).ToList();
+        }
+
+        allSets = await Db.InstrumentSets.ToListAsync();
+    }
+
+    private void OnSelectedValuesChanged(List<int> ids)
+    {
+        selectedSetIds = ids;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (card is null) return;
+
+        var selectedSets = await Db.InstrumentSets
+            .Where(set => selectedSetIds.Contains(set.Id))
+            .ToListAsync();
+
+        card.InstrumentSets = selectedSets;
+
+        Db.PreferenceCards.Update(card);
+        await Db.SaveChangesAsync();
+
+        NavigationManager.NavigateTo("/cards");
+    }
+}
