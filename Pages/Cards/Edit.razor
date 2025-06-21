@@ -32,7 +32,10 @@
 
                     <Field>
                         <Label>Instrument Sets</Label>
-                        <Select TValue="int" Multiple="true" @bind-SelectedValues="selectedSetIds">
+                        <Select TValue="int"
+                                Multiple="true"
+                                SelectedValues="selectedSetIds"
+                                SelectedValuesChanged="OnSelectedSetIdsChanged">
                             @foreach (var set in allSets)
                             {
                                 <SelectItem Value="@set.Id">@set.SetName</SelectItem>
@@ -53,45 +56,46 @@
 @code {
     [Parameter] public int id { get; set; }
 
-    private PreferenceCard card = new();
+    private PreferenceCard? card;
     private List<InstrumentSet> allSets = new();
     private List<int> selectedSetIds = new();
     private Validations? validationsRef;
 
     protected override async Task OnInitializedAsync()
     {
-        allSets = await Db.InstrumentSets.ToListAsync();
         card = await Db.PreferenceCards
             .Include(c => c.InstrumentSets)
-            .FirstOrDefaultAsync(c => c.Id == id) ?? new();
+            .FirstOrDefaultAsync(c => c.Id == id);
 
+        if (card == null)
+        {
+            NavigationManager.NavigateTo("/cards");
+            return;
+        }
+
+        allSets = await Db.InstrumentSets.ToListAsync();
         selectedSetIds = card.InstrumentSets.Select(s => s.Id).ToList();
+    }
+
+    private Task OnSelectedSetIdsChanged(List<int> ids)
+    {
+        selectedSetIds = ids;
+        return Task.CompletedTask;
     }
 
     private async Task HandleValidSubmit()
     {
-        var existingCard = await Db.PreferenceCards
-            .Include(c => c.InstrumentSets)
-            .FirstOrDefaultAsync(c => c.Id == card.Id);
+        if (card == null)
+            return;
 
-        if (existingCard is not null)
-        {
-            existingCard.SurgeonName = card.SurgeonName;
-            existingCard.ProcedureName = card.ProcedureName;
+        var updatedSets = await Db.InstrumentSets
+            .Where(set => selectedSetIds.Contains(set.Id))
+            .ToListAsync();
 
-            existingCard.InstrumentSets.Clear();
+        card.InstrumentSets = updatedSets;
 
-            var selectedSets = await Db.InstrumentSets
-                .Where(s => selectedSetIds.Contains(s.Id))
-                .ToListAsync();
-
-            foreach (var set in selectedSets)
-            {
-                existingCard.InstrumentSets.Add(set);
-            }
-
-            await Db.SaveChangesAsync();
-            NavigationManager.NavigateTo("/cards");
-        }
+        Db.PreferenceCards.Update(card);
+        await Db.SaveChangesAsync();
+        NavigationManager.NavigateTo("/cards");
     }
 }
