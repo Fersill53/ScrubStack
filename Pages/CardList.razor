@@ -1,8 +1,11 @@
-@using ScrubStack.Data.Models
-@using Microsoft.EntityFrameworkCore
 @page "/cards"
 @attribute [Authorize]
+
+@using ScrubStack.Data
+@using ScrubStack.Data.Models
+@using Microsoft.EntityFrameworkCore
 @inject ApplicationDbContext Db
+@inject NavigationManager NavigationManager
 
 <h3>Surgeon Preference Cards</h3>
 
@@ -18,7 +21,7 @@ else if (cards is not null && cards.Any())
                 <th>Surgeon</th>
                 <th>Procedure</th>
                 <th>Instrument Sets</th>
-                <th></th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -34,8 +37,8 @@ else if (cards is not null && cards.Any())
                         }
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-primary me-1">Edit</button>
-                        <button class="btn btn-sm btn-danger">Delete</button>
+                        <button class="btn btn-sm btn-primary me-2" @onclick="() => EditCard(card.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteCard(card.Id)">Delete</button>
                     </td>
                 </tr>
             }
@@ -57,5 +60,27 @@ else
             .Include(c => c.InstrumentSets)
             .ToListAsync();
         loading = false;
+    }
+
+    private void EditCard(int id)
+    {
+        NavigationManager.NavigateTo($"/cards/edit/{id}");
+    }
+
+    private async Task DeleteCard(int id)
+    {
+        var card = await Db.PreferenceCards
+            .Include(c => c.InstrumentSets)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (card is not null)
+        {
+            card.InstrumentSets?.Clear(); // if using many-to-many
+            Db.PreferenceCards.Remove(card);
+            await Db.SaveChangesAsync();
+
+            cards.Remove(card);
+            StateHasChanged();
+        }
     }
 }
