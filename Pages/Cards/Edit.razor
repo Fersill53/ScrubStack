@@ -30,18 +30,17 @@
                     </Field>
 
                     <Field>
-    <Label>Instrument Sets</Label>
-    <Select TValue="int"
-            Multiple="true"
-            SelectedValues="selectedSetIds"
-            SelectedValuesChanged="@EventCallback.Factory.Create<List<int>>(this, OnSelectedSetIdsChanged)">
-        @foreach (var set in allSets)
-        {
-            <SelectItem Value="@set.Id">@set.SetName</SelectItem>
-        }
-    </Select>
-</Field>
-
+                        <Label>Instrument Sets</Label>
+                        <Select TValue="int"
+                                Multiple="true"
+                                SelectedValues="@selectedSetIds"
+                                SelectedValuesChanged="HandleSelectedSetIdsChanged">
+                            @foreach (var set in allSets)
+                            {
+                                <SelectItem Value="@set.Id">@set.SetName</SelectItem>
+                            }
+                        </Select>
+                    </Field>
 
                 </Fields>
 
@@ -56,37 +55,36 @@
 @code {
     [Parameter] public int id { get; set; }
 
-    private PreferenceCard? card;
+    private PreferenceCard card = new(); // Eliminates nullable warning
     private List<InstrumentSet> allSets = new();
     private List<int> selectedSetIds = new();
     private Validations? validationsRef;
 
     protected override async Task OnInitializedAsync()
     {
-        card = await Db.PreferenceCards
+        var dbCard = await Db.PreferenceCards
             .Include(c => c.InstrumentSets)
             .FirstOrDefaultAsync(c => c.Id == id);
 
-        if (card is null)
+        if (dbCard is null)
         {
             NavigationManager.NavigateTo("/cards");
             return;
         }
 
+        card = dbCard;
         allSets = await Db.InstrumentSets.ToListAsync();
         selectedSetIds = card.InstrumentSets?.Select(s => s.Id).ToList() ?? new List<int>();
     }
 
-    private Task OnSelectedSetIdsChanged(List<int> ids)
+    private Task HandleSelectedSetIdsChanged(IEnumerable<int> ids)
     {
-        selectedSetIds = ids;
+        selectedSetIds = ids.ToList();
         return Task.CompletedTask;
     }
 
     private async Task HandleValidSubmit()
     {
-        if (card is null) return;
-
         var selectedSets = await Db.InstrumentSets
             .Where(set => selectedSetIds.Contains(set.Id))
             .ToListAsync();
