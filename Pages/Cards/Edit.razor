@@ -30,17 +30,18 @@
                     </Field>
 
                     <Field>
-                        <Label>Instrument Sets</Label>
-                        <Select TValue="int"
-                                Multiple="true"
-                                SelectedValues="selectedSetIds"
-                                SelectedValuesChanged="OnSelectedSetIdsChanged">
-                            @foreach (var set in allSets)
-                            {
-                                <SelectItem Value="@set.Id">@set.SetName</SelectItem>
-                            }
-                        </Select>
-                    </Field>
+    <Label>Instrument Sets</Label>
+    <Select TValue="int"
+            Multiple="true"
+            SelectedValues="selectedSetIds"
+            SelectedValuesChanged="@EventCallback.Factory.Create<List<int>>(this, OnSelectedSetIdsChanged)">
+        @foreach (var set in allSets)
+        {
+            <SelectItem Value="@set.Id">@set.SetName</SelectItem>
+        }
+    </Select>
+</Field>
+
 
                 </Fields>
 
