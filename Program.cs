@@ -45,7 +45,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseBlazorise(); 
+
 
 app.MapRazorPages();
 app.MapBlazorHub();
