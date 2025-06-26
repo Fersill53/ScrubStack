@@ -21,7 +21,11 @@
     </PackageReference>
   </ItemGroup>
 
-  
+  <ItemGroup>
+    <none Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </none>
+  </ItemGroup>
 
 
 </Project>
